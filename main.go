@@ -29,7 +29,9 @@ func main() {
 	}
 	log.Println("Configuring server")
 	// Create the new MQTT Server.
-	server := mqtt.NewServer(nil)
+	server := mqtt.NewServer(&mqtt.Options{
+		BufferSize: 4096 * 1024,
+	})
 
 	listenerConfig := &listeners.Config{
 		Auth: &utils.FileAuth{
