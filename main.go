@@ -17,6 +17,12 @@ func main() {
 	log.Println("Initializing MQTT server")
 	log.Println("Reading auth file")
 	httpAuthFile := flag.String("auth", "./auth.htpasswd", "Path to htpasswd file for HTTP auth")
+	needHelp := flag.Bool("help", false, "Show help")
+	flag.Parse()
+	if *needHelp {
+		flag.PrintDefaults()
+		return
+	}
 	authDb, err := htpasswd.New(*httpAuthFile, htpasswd.DefaultSystems, nil)
 	if err != nil {
 		log.Fatal(err)

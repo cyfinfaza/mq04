@@ -1,6 +1,6 @@
 module mqtt-server
 
-go 1.19
+go 1.18
 
 require (
 	github.com/mochi-co/mqtt v1.3.2
