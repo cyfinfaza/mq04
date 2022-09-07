@@ -1,26 +1,44 @@
 package main
 
 import (
+	"flag"
 	"log"
+	"mqtt-server/utils"
 	"os"
 	"os/signal"
 	"syscall"
 
 	mqtt "github.com/mochi-co/mqtt/server"
 	"github.com/mochi-co/mqtt/server/listeners"
+	"github.com/tg123/go-htpasswd"
 )
 
 func main() {
+	log.Println("Initializing MQTT server")
+	log.Println("Reading auth file")
+	httpAuthFile := flag.String("auth", "./auth.htpasswd", "Path to htpasswd file for HTTP auth")
+	authDb, err := htpasswd.New(*httpAuthFile, htpasswd.DefaultSystems, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Configuring server")
 	// Create the new MQTT Server.
 	server := mqtt.NewServer(nil)
 
-	// Create a TCP listener on a standard port.
-	tcp := listeners.NewTCP("t1", ":1883")
+	listenerConfig := &listeners.Config{
+		Auth: &utils.FileAuth{
+			Checker: authDb,
+		},
+	}
 
-	// Add the listener to the server with default options (nil).
-	err := server.AddListener(tcp, nil)
-	if err != nil {
-		log.Fatal(err)
+	configuredListeners := []listeners.Listener{
+		listeners.NewTCP("tcp0", ":1884"),
+		listeners.NewWebsocket("ws0", ":8084"),
+	}
+
+	for _, l := range configuredListeners {
+		log.Println("Adding listener", l.ID())
+		server.AddListener(l, listenerConfig)
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -31,10 +49,11 @@ func main() {
 		done <- true
 	}()
 
-	log.Println("Starting MQTT Server")
 	// Start the broker. Serve() is blocking - see examples folder
 	// for usage ideas.
+	log.Println("Starting server")
 	go server.Serve()
+	log.Println("Serving")
 	<-done
 	log.Println("Server stopped")
 }

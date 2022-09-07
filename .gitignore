@@ -1,1 +1,2 @@
-./mqtt-server
+/mqtt-server*
+auth.htpasswd
