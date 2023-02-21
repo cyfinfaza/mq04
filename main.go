@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	mqtt "github.com/mochi-co/mqtt/server"
+	"github.com/mochi-co/mqtt/server/events"
 	"github.com/mochi-co/mqtt/server/listeners"
 	"github.com/tg123/go-htpasswd"
 )
@@ -30,8 +31,13 @@ func main() {
 	log.Println("Configuring server")
 	// Create the new MQTT Server.
 	server := mqtt.NewServer(&mqtt.Options{
-		BufferSize: 4096 * 1024,
+		BufferSize: 256 * 1024,
 	})
+
+	server.Events.OnMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+		log.Printf("Message from %s: %s", cl.ID, pk.Payload)
+		return pk, nil
+	}
 
 	listenerConfig := &listeners.Config{
 		Auth: &utils.FileAuth{
